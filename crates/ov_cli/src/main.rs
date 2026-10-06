@@ -2960,12 +2960,6 @@ fn preprocess_compact_args(args: Vec<OsString>) -> Vec<OsString> {
 
     while i < args.len() {
         let token = args[i].to_string_lossy();
-        // A content value is data, even when it is exactly a compact option.
-        if token == "--content" && i + 1 < args.len() {
-            converted.extend(args[i..i + 2].iter().cloned());
-            i += 2;
-            continue;
-        }
         if token == "--compact" || token == "-c" {
             if let Some(next) = args.get(i + 1) {
                 let next_value = next.to_string_lossy();
@@ -4982,27 +4976,6 @@ mod tests {
                 cli.command,
                 Commands::Write { content, wait, .. } if content.as_deref() == Some(text) && wait
             ));
-        }
-    }
-
-    #[test]
-    fn cli_write_preserves_compact_tokens_as_content() {
-        for text in ["--compact", "-c"] {
-            let cli = Cli::try_parse_from(preprocess_cli_args(os_args(&[
-                "ov",
-                "write",
-                "viking://resources/test.md",
-                "--content",
-                text,
-                "--compact",
-                "false",
-            ])))
-            .expect("compact-looking content should remain literal");
-            assert!(!cli.compact);
-            let Commands::Write { content, .. } = cli.command else {
-                panic!("expected write command");
-            };
-            assert_eq!(content.as_deref(), Some(text));
         }
     }
 
